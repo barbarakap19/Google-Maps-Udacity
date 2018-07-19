@@ -82,10 +82,81 @@
         var markers = [];
         
         function initMap() {
+
+          // Criado um array de estilos.
+        var styles = [
+          {
+            featureType: 'water', //elementos geograficos destacados, ex.: estradas, parques, corpos de agua...
+            stylers: [
+              { color: '#19a0d8' }
+            ]
+          },{
+            featureType: 'administrative',
+            elementType: 'labels.text.stroke', //elementos da feature que vc quer mudar, ex.: geometria, etiqueta, a borda da etiqueta ou o texto.
+            stylers: [ // são propriedades de cor e visibilidade que podem ser aplicadas a features do mapa
+              { color: '#ffffff' },
+              { weight: 6 }
+            ]
+          },{
+            featureType: 'administrative',
+            elementType: 'labels.text.fill',
+            stylers: [
+              { color: '#e85113' }
+            ]
+          },{
+            featureType: 'road.highway',
+            elementType: 'geometry.stroke',
+            stylers: [
+              { color: '#efe9e4' },
+              { lightness: -40 }
+            ]
+          },{
+            featureType: 'transit.station',
+            stylers: [
+              { weight: 9 },
+              { hue: '#e85113' }
+            ]
+          },{
+            featureType: 'road.highway',
+            elementType: 'labels.icon',
+            stylers: [
+              { visibility: 'off' }
+            ]
+          },{
+            featureType: 'water',
+            elementType: 'labels.text.stroke',
+            stylers: [
+              { lightness: 100 }
+            ]
+          },{
+            featureType: 'water',
+            elementType: 'labels.text.fill',
+            stylers: [
+              { lightness: -100 }
+            ]
+          },{
+            featureType: 'poi',
+            elementType: 'geometry',
+            stylers: [
+              { visibility: 'on' },
+              { color: '#f0e4d3' }
+            ]
+          },{
+            featureType: 'road.highway',
+            elementType: 'geometry.fill',
+            stylers: [
+              { color: '#efe9e4' },
+              { lightness: -25 }
+            ]
+          }
+        ];
+
           // Criado o mapa
           map = new google.maps.Map(document.getElementById('map'), { //localização no html
             center: {lat: 40.7413549, lng: -73.9980244}, //lugar central
-            zoom: 13
+            zoom: 13,
+            styles: styles,
+            mapTypeControl: false
             
           });
 
@@ -103,6 +174,12 @@
           ];
 
           var largeInfowindow = new google.maps.InfoWindow();
+
+           // Criado dois icones de marcadores. Um é o icone padrao que vai aparecer quando os marcadores surgirem no mapa
+          var defaultIcon = makeMarkerIcon('0091ff');
+          
+          // O outro é o icone destacado que vai aparecer quando eu passar por cima do marcador
+          var highlightedIcon = makeMarkerIcon('FFFF24');
           
           // Feito um loop passando pelos locais que criamos para poder criar um marcador por local
           for (var i = 0; i < locations.length; i++) {
@@ -115,6 +192,7 @@
               map: map,
               position: position,
               title: title,
+              icon: defaultIcon, // defino o icone de cada um deles para o icone padrão
               animation: google.maps.Animation.DROP,
               id: i
             });
@@ -126,10 +204,20 @@
             marker.addListener('click', function() {
             populateInfoWindow(this, largeInfowindow);
             });
-           
+
+           // Adicionar dois eventos listeners. 
+          // um para o evento mouse over, mudar o icone para o destacado
+            marker.addListener('mouseover', function() {
+              this.setIcon(highlightedIcon);
+            });
+            // outro para o evento mouseout para faze-lo voltar ao icone padrão
+            marker.addListener('mouseout', function() {
+              this.setIcon(defaultIcon);
+          });
+        
           }
-        document.getElementById('show-listings').addEventListener('click', showListings);
-        document.getElementById('hide-listings').addEventListener('click', hideListings);
+            document.getElementById('show-listings').addEventListener('click', showListings);
+            document.getElementById('hide-listings').addEventListener('click', hideListings);
          
         }
 
@@ -142,29 +230,45 @@
             infowindow.marker = marker;
             infowindow.setContent('<div>' + marker.title + '</div>');
             infowindow.open(map, marker);
-            // 
+            
             infowindow.addListener('closeclick',function(){
               infowindow.setMarker = null;
             });
           }
         }
 
-        // This function will loop through the markers array and display them all.
+        // Fazer um loop pelo array de marcadores,definir o mapa para "map" em cada um dos marcadores
+        // e estender os limites do mapa para que todos os marcadores caibam nele
       function showListings() {
         var bounds = new google.maps.LatLngBounds();
-        // Extend the boundaries of the map for each marker and display the marker
+        
         for (var i = 0; i < markers.length; i++) {
           markers[i].setMap(map);
           bounds.extend(markers[i].position);
         }
         map.fitBounds(bounds);
       }
-      // This function will loop through the listings and hide them all.
+      // Vai fazer um loop no array de marcadores e vai definir o mapa para nulo em cada marcador
       function hideListings() {
         for (var i = 0; i < markers.length; i++) {
           markers[i].setMap(null);
         }
       }
+
+      
+      // essa função "makeMakerIcon" pega a cor de um marcador e cria uma nova imagem de marcador usando essa cor
+      
+      function makeMarkerIcon(markerColor) {
+        var markerImage = new google.maps.MarkerImage(
+          'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|'+ markerColor +
+          '|40|_|%E2%80%A2',
+          new google.maps.Size(21, 34),
+          new google.maps.Point(0, 0),
+          new google.maps.Point(10, 34),
+          new google.maps.Size(21,34));
+        return markerImage;
+      }
+
       </script>
 
     <script async defer
